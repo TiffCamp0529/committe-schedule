@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Committee Meeting Schedule — Berea College Academic Affairs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,500&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=Google+Sans+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --berea-blue:#004175;
+    --light-blue:#49B4EF;
+    --bright-blue:#76E2FF;
+    --blue-gray:#8AAAC5;
+    --chartreuse:#D2DE26;
+    --green:#7D9D1E;
+    --gray:#D9D9D4;
+    --ink:#1B2430;
+    --paper:#FAFAF8;
+
+    /* committee color palette — referenced by "color" field in committees-data.js */
+    --c-blue-bg:#004175;       --c-blue-text:#FFFFFF;
+    --c-sky-bg:#49B4EF;        --c-sky-text:#06263B;
+    --c-teal-bg:#146B62;       --c-teal-text:#FFFFFF;
+    --c-green-bg:#6F8E22;      --c-green-text:#FFFFFF;
+    --c-chartreuse-bg:#D7E23A; --c-chartreuse-text:#1B2400;
+    --c-gold-bg:#C08A2E;       --c-gold-text:#241500;
+    --c-coral-bg:#D9694E;      --c-coral-text:#FFFFFF;
+    --c-slate-bg:#5B6B7C;      --c-slate-text:#FFFFFF;
+    --c-plum-bg:#7A4C91;       --c-plum-text:#FFFFFF;
+    --c-navy-bg:#0B2F4E;       --c-navy-text:#FFFFFF;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:'Barlow',sans-serif;}
+
+  a{color:inherit;}
+
+  .hero{
+    background:linear-gradient(160deg,var(--berea-blue) 0%, #002d52 100%);
+    color:#fff;
+    padding:2.4rem 1.5rem 2rem;
+    text-align:center;
+  }
+  .hero .eyebrow{
+    font-family:'Barlow Condensed',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:.8rem;
+    color:var(--bright-blue);
+    font-weight:700;
+  }
+  .hero h1{
+    font-family:'Newsreader',serif;
+    font-weight:600;
+    font-size:clamp(1.8rem,4vw,2.6rem);
+    margin:.3rem 0 .4rem;
+  }
+  .hero .semester{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:1.1rem;
+    letter-spacing:.04em;
+    color:var(--bright-blue);
+    font-weight:600;
+    text-transform:uppercase;
+  }
+  .hero .updated{
+    margin-top:.6rem;
+    font-family:'Google Sans Code',monospace;
+    font-size:.78rem;
+    color:var(--blue-gray);
+  }
+
+  .legend-wrap{
+    max-width:1100px;
+    margin:1.4rem auto 0;
+    padding:0 1.2rem;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.5rem .9rem;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border:1px solid var(--gray);
+    border-radius:10px;
+    padding:.8rem 1rem;
+    font-size:.82rem;
+  }
+  .legend-item{display:flex;align-items:center;gap:.45rem;}
+  .swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+  .legend-note{
+    font-family:'Barlow Condensed',sans-serif;
+    color:#556;
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    margin-left:.4rem;
+    padding-left:.8rem;
+    border-left:1px solid var(--gray);
+  }
+  .stripe-sample{
+    width:20px;height:14px;border-radius:3px;flex-shrink:0;
+    background:repeating-linear-gradient(45deg,#5B6B7C,#5B6B7C 5px,#7c8898 5px,#7c8898 10px);
+  }
+  .protected-sample{
+    width:20px;height:14px;border-radius:3px;flex-shrink:0;
+    background:repeating-linear-gradient(135deg,#5B6B7C,#5B6B7C 4px,#8393a3 4px,#8393a3 8px);
+    border:1px dashed #fff;
+  }
+
+  .schedule-outer{
+    max-width:1100px;
+    margin:1.4rem auto 3rem;
+    padding:0 1.2rem;
+  }
+  .schedule-scroll{
+    overflow-x:auto;
+    border:1px solid var(--gray);
+    border-radius:12px;
+    background:#fff;
+    box-shadow:0 2px 10px rgba(0,20,40,.06);
+  }
+  .schedule-grid{
+    display:grid;
+    grid-template-columns: 64px repeat(5, minmax(140px, 1fr));
+    min-width:780px;
+  }
+  .head-cell{
+    font-family:'Barlow Condensed',sans-serif;
+    text-transform:uppercase;
+    font-weight:700;
+    letter-spacing:.05em;
+    font-size:.9rem;
+    color:var(--berea-blue);
+    text-align:center;
+    padding:.8rem .4rem;
+    border-bottom:2px solid var(--berea-blue);
+    background:#F1F6FA;
+    position:sticky;
+    top:0;
+  }
+  .head-cell.time-head{background:#fff;border-bottom:2px solid var(--berea-blue);}
+
+  .time-col{
+    position:relative;
+    border-right:1px solid var(--gray);
+    background:#fff;
+  }
+  .hour-label{
+    position:absolute;
+    left:0;right:6px;
+    text-align:right;
+    font-family:'Google Sans Code',monospace;
+    font-size:.68rem;
+    color:#5c6b7a;
+    transform:translateY(-6px);
+  }
+
+  .day-col{
+    position:relative;
+    border-right:1px solid var(--gray);
+    background-image:repeating-linear-gradient(
+      to bottom,
+      #eef1f4 0, #eef1f4 1px, transparent 1px, transparent var(--hr-px)
+    );
+  }
+  .day-col:last-child{border-right:none;}
+
+  .block{
+    position:absolute;
+    left:4px;right:4px;
+    border-radius:8px;
+    padding:.35rem .5rem;
+    font-size:.78rem;
+    line-height:1.25;
+    overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,.18);
+    border:1px solid rgba(0,0,0,.08);
+    cursor:default;
+  }
+  .block .b-name{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:.86rem;
+    display:block;
+  }
+  .block .b-time{
+    font-family:'Google Sans Code',monospace;
+    font-size:.68rem;
+    opacity:.9;
+    display:block;
+  }
+  .block .b-tag{
+    display:inline-block;
+    margin-top:.2rem;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:.62rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    background:rgba(255,255,255,.35);
+    border-radius:4px;
+    padding:.05rem .35rem;
+  }
+  .block.biweekly{
+    background-image:repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 6px, rgba(255,255,255,0) 6px 12px);
+  }
+  .block.protected{
+    background-image:repeating-linear-gradient(135deg, rgba(255,255,255,.22) 0 8px, rgba(255,255,255,0) 8px 16px);
+    border-style:dashed;
+  }
+
+  .block:hover .tooltip{display:block;}
+  .tooltip{
+    display:none;
+    position:absolute;
+    bottom:calc(100% + 6px);
+    left:0;
+    background:#1B2430;
+    color:#fff;
+    padding:.5rem .65rem;
+    border-radius:8px;
+    font-size:.72rem;
+    font-family:'Barlow',sans-serif;
+    width:200px;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    z-index:20;
+  }
+
+  footer{
+    text-align:center;
+    padding:1.5rem 1rem 2.5rem;
+    font-family:'Google Sans Code',monospace;
+    font-size:.72rem;
+    color:#7d8b99;
+  }
+  footer a{color:var(--berea-blue);text-decoration:underline;}
+
+  @media (max-width:640px){
+    .hero{padding:1.8rem 1rem 1.5rem;}
+    .schedule-grid{grid-template-columns:52px repeat(5, minmax(120px,1fr));}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">Berea College · Academic Affairs</div>
+  <h1>Committee Meeting Schedule</h1>
+  <div class="semester" id="semesterLabel">Loading…</div>
+  <div class="updated" id="updatedLabel"></div>
+</header>
+
+<div class="legend-wrap">
+  <div class="legend" id="legend">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<div class="schedule-outer">
+  <div class="schedule-scroll">
+    <div class="schedule-grid" id="scheduleGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built for Berea College Academic Affairs · Schedule data lives in <code>committees-data.js</code> ·
+  <a href="admin.html">Semester update tool →</a>
+</footer>
+
+<script src="committees-data.js"></script>
+<script>
+(function(){
+  const DATA = window.COMMITTEE_SCHEDULE || { semester:"", lastUpdated:"", committees:[] };
+  const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
+  const PALETTE = {
+    blue:       {bg:"var(--c-blue-bg)",       text:"var(--c-blue-text)"},
+    sky:        {bg:"var(--c-sky-bg)",        text:"var(--c-sky-text)"},
+    teal:       {bg:"var(--c-teal-bg)",       text:"var(--c-teal-text)"},
+    green:      {bg:"var(--c-green-bg)",      text:"var(--c-green-text)"},
+    chartreuse: {bg:"var(--c-chartreuse-bg)", text:"var(--c-chartreuse-text)"},
+    gold:       {bg:"var(--c-gold-bg)",       text:"var(--c-gold-text)"},
+    coral:      {bg:"var(--c-coral-bg)",      text:"var(--c-coral-text)"},
+    slate:      {bg:"var(--c-slate-bg)",      text:"var(--c-slate-text)"},
+    plum:       {bg:"var(--c-plum-bg)",       text:"var(--c-plum-text)"},
+    navy:       {bg:"var(--c-navy-bg)",       text:"var(--c-navy-text)"}
+  };
+
+  function parseTime(str){
+    const m = String(str).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if(!m) return null;
+    let h = parseInt(m[1],10);
+    const min = parseInt(m[2],10);
+    const ap = m[3].toUpperCase();
+    if(ap === "PM" && h !== 12) h += 12;
+    if(ap === "AM" && h === 12) h = 0;
+    return h*60 + min;
+  }
+
+  function fmtHour(mins){
+    let h = Math.floor(mins/60);
+    const ap = h >= 12 ? "PM" : "AM";
+    let h12 = h % 12; if(h12 === 0) h12 = 12;
+    return h12 + (ap==="AM" && h===0 ? "" : "") + " " + ap;
+  }
+
+  const committees = (DATA.committees||[]).filter(c => parseTime(c.start)!==null && parseTime(c.end)!==null);
+
+  let minStart = Math.min(...committees.map(c=>parseTime(c.start)), 8*60);
+  let maxEnd   = Math.max(...committees.map(c=>parseTime(c.end)), 17*60);
+  minStart = Math.floor(minStart/60)*60;
+  maxEnd   = Math.ceil(maxEnd/60)*60;
+
+  const PX_PER_MIN = 1.6;
+  const totalMin = maxEnd - minStart;
+  const totalPx = totalMin * PX_PER_MIN;
+  const hourPx = 60 * PX_PER_MIN;
+
+  document.getElementById("semesterLabel").textContent = DATA.semester || "";
+  document.getElementById("updatedLabel").textContent = DATA.lastUpdated ? ("Last updated " + DATA.lastUpdated) : "";
+
+  // Legend
+  const usedColors = {};
+  committees.forEach(c => { usedColors[c.color] = c.name; });
+  const legendEl = document.getElementById("legend");
+  let legendHtml = "";
+  Object.keys(usedColors).forEach(color => {
+    const p = PALETTE[color] || PALETTE.blue;
+    legendHtml += `<div class="legend-item"><span class="swatch" style="background:${p.bg}"></span>${usedColors[color]}</div>`;
+  });
+  legendHtml += `
+    <div class="legend-note"><span class="stripe-sample"></span> Biweekly</div>
+    <div class="legend-note"><span class="protected-sample"></span> Protected / reserved time</div>
+  `;
+  legendEl.innerHTML = legendHtml;
+
+  // Grid
+  const grid = document.getElementById("scheduleGrid");
+  grid.style.setProperty("--hr-px", hourPx + "px");
+
+  let html = `<div class="head-cell time-head"></div>`;
+  DAYS.forEach(d => { html += `<div class="head-cell">${d}</div>`; });
+
+  html += `<div class="time-col" style="height:${totalPx}px;">`;
+  for(let t = minStart; t <= maxEnd; t += 60){
+    const top = (t - minStart) * PX_PER_MIN;
+    html += `<div class="hour-label" style="top:${top}px;">${fmtHour(t)}</div>`;
+  }
+  html += `</div>`;
+
+  DAYS.forEach(day => {
+    html += `<div class="day-col" style="height:${totalPx}px;">`;
+    committees.filter(c => c.day === day).forEach(c => {
+      const start = parseTime(c.start);
+      const end = parseTime(c.end);
+      const top = (start - minStart) * PX_PER_MIN;
+      const height = Math.max((end - start) * PX_PER_MIN, 30);
+      const p = PALETTE[c.color] || PALETTE.blue;
+      const isBiweekly = (c.frequency||"").toLowerCase() === "biweekly";
+      const isProtected = (c.type||"").toLowerCase() === "protected";
+      const classes = ["block"];
+      if(isBiweekly) classes.push("biweekly");
+      if(isProtected) classes.push("protected");
+      const tag = isProtected ? "Protected" : (isBiweekly ? "Biweekly" : "");
+      html += `<div class="${classes.join(' ')}" style="top:${top}px;height:${height}px;background:${p.bg};color:${p.text};">
+        <span class="b-name">${c.name}</span>
+        <span class="b-time">${c.start} – ${c.end}</span>
+        ${tag ? `<span class="b-tag">${tag}</span>` : ""}
+        ${c.notes ? `<div class="tooltip">${c.notes}</div>` : ""}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+})();
+</script>
+</body>
+</html>
